@@ -1,3 +1,4 @@
+import pandas as pd
 import csv, sqlite3
 from datetime import datetime
 
@@ -23,7 +24,6 @@ class CoopManager:
                 if data[d][0] == self.user:
                     checkPassword = input("Please enter password")
                     if checkPassword == data[d][1]:
-                        print("ymym")
                         getAccess = False
                         break
         
@@ -34,12 +34,17 @@ class CoopManager:
         dateNow = datetime.now()
     
         grade_file = self.user + "grades" + ".csv"
+        gradeHeaders = [['Course Code', 'Course Name', 'Grade']]
         with open(grade_file, "w") as fh:
-            pass
+            gradeNames = csv.writer(fh)
+            gradeNames.writerows(gradeHeaders)
         
         job_file = self.user + "jobs" + ".csv"
+        jobHeaders = [['Company Name', 'Length', 'Salary in $']]
         with open(job_file, "w") as fh:
-            pass
+            jobNames = csv.writer(fh)
+            jobNames.writerows(jobHeaders)
+          
         #executing many rows
         many = [(user, user_password, grade_file, job_file, dateNow)]
 
@@ -67,10 +72,11 @@ class CoopManager:
                     marksFile = data[d][2]
                     
                     while correctGrades:
-                        subject = input("what subject")
-                        mark = input("what is your grade for this subject?")  
-            
-                        update_values.append([subject,mark])
+                        code = input("what is the course code?")
+                        cName = input("what is your course name?")  
+                        mark = input("what was your mark?")
+                        
+                        update_values.append([code,cName,mark])
                         
                         stillAsk = input("do you still want to add more subjects? press 1 for no and anything else for yes")
                         
@@ -84,10 +90,11 @@ class CoopManager:
                     marksFile = data[d][3]
 
                     while correctJobs:
-                        job = input("what job")
-                        success = input("have you gotten the job?")  
+                        job = input("what was the name of the company?")
+                        length = input("how long did you work for?")  
+                        salary = input("please indicate your salary in $")
             
-                        update_values.append([job,success])
+                        update_values.append([job,length, salary])
                         
                         stillAsk = input("do you still want to add more subjects? press 1 for no and anything else for yes")
                         
@@ -106,11 +113,46 @@ class CoopManager:
                     self.file_path = data[d][2]
                 elif file_path == 'j' or file_path == "J":
                     self.file_path = data[d][3]
+                
+        wantSort = input("do you want your data to be sorted? Press 1 for yes and anything else for no")
         
-        with open(self.file_path) as fh:
-            grades = csv.reader(fh)
-            for row in grades:
-                print(row)
+        df = pd.read_csv(self.file_path)
+        
+        if wantSort == "1":
+            if self.file_path[len(self.file_path)-8:len(self.file_path):] != 'jobs.csv':
+                whichSort = input("what do you want to be sorted? press 1 for the course code, 2 for the course name, and 3 for grades. if you press neither, grades will automatically be sorted")
+                
+                isAssending = True
+                userAssending = input("do you want your data to be in assending order? press 1 for yes and anything else for no.")
+                
+                if userAssending != "1":
+                    isAssending = False
+                      
+                if whichSort == "1":
+                   print(df.sort_values('Course Code', ascending = isAssending))                 
+                elif whichSort == "2":
+                    print(df.sort_values('Course Name', ascending = isAssending))
+                else:
+                    print(df.sort_values('Grade', ascending = isAssending))
+            else:
+                whichSort = input("what do you want to be sorted? press 1 for the company name, 2 for the length of job, and 3 for salary. if you press neither, salary will automatically be sorted")
+                
+                isAssending = True
+                userAssending = input("do you want your data to be in assending order? press 1 for yes and anything else for no.")
+                
+                if userAssending != "1":
+                    isAssending = False
+                      
+                if whichSort == "1":
+                   print(df.sort_values('Company Name', ascending = isAssending))                       
+                elif whichSort == "2":
+                    print(df.sort_values('Length', ascending = isAssending))
+                else:
+                    print(df.sort_values('Salary in $', ascending = isAssending))
+        else:
+            print(df)
+        
+        return
 
             
 operate = True
@@ -136,7 +178,7 @@ while operate:
     
     wantUpdate = True
     while wantUpdate:
-        fileChoose = input("which file do you want to read? type \"g\" for grades and \"j\" for jobs")
+        fileChoose = input("which file do you want to read? type \"g\" for grades, \"j\" for jobs, and \"q\" to quit program")
         
         if fileChoose == 'g' or fileChoose == "G" or fileChoose == 'j' or fileChoose == 'J':
             actionFile = input("Do you want to read or update file? Type \"r\" for read, \"u\" for update, or \"q\" to quit program")
@@ -151,8 +193,12 @@ while operate:
                     coop.updateFiles(fileChoose)
                     appropiateFile = True
                 elif actionFile == 'q' or actionFile == "Q":
+                    wantUpdate = False
                     operate = False
-
+        elif fileChoose == 'q' or fileChoose == "Q":
+            wantUpdate = False
+            operate = False
+            
 #cursor.execute("INSERT INTO customers VALUES (str(user),str(user_password),str(user_file),datenow)")
 conn.close()
     
